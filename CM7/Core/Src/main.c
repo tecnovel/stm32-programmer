@@ -140,7 +140,7 @@ Error_Handler();
 
   setvbuf(stdout, NULL, _IOLBF, 0);
 
-    printf("Hello World!\n");
+  printf("Hello World!\n");
 
   /*if(BL_Mount_FS() == false){
 	  printf("failed mounting!\n");
@@ -170,9 +170,16 @@ Error_Handler();
 
 
 
-  if(BL_InitBootloader() == true){
-	  printf("bootloader started!\n");
+  if(BL_InitBootloader() != true){
+	  printf("bootloader starting failed!\n");
+	  while(1);
   }
+
+//  uint8_t buffer[15];
+//  uint16_t out_len;
+//  BL_GetVersion(buffer);
+//
+//  BL_Hexdump(buffer, 5);
 
  // BL_ReadMemoryHexdump(0x08000000, 8);
 

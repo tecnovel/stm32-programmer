@@ -12,8 +12,8 @@
 
 static uint32_t base_address = 0; // Extended linear address
 static uint32_t start_address = 0xFFFFFFFF; // An invalid default address
-static uint8_t supported_cmd[15];
-static uint16_t supported_cmd_len = 0;
+static uint8_t supported_cmd[15] = {0x00};
+static uint16_t supported_cmd_len = 1;
 
 /* ****************************** Custom helper functions *********************** */
 
@@ -36,7 +36,7 @@ static bool BL_IsCommandSupported(uint8_t cmd) {
             return true;
         }
     }
-    printf("Command %u not supported", cmd);
+    printf("Command %02x not supported\n", cmd);
     return false;
 }
 
@@ -78,22 +78,25 @@ bool BL_Get(uint8_t *buffer, uint16_t max_len, uint16_t *out_len) {
     if (BL_UART_Receive(buffer, 1, 1000) != HAL_OK) {
         return false;
     }
-    uint8_t num_bytes = buffer[0] + 1; // Number of bytes to follow
+    uint8_t num_bytes = buffer[0]; // Number of bytes to follow
 
     if (num_bytes > max_len) {
         return false; // Provided buffer isn't large enough
     }
 
-    if (BL_UART_Receive(&buffer[1], num_bytes, 1000) != HAL_OK) {
+    if (BL_UART_Receive(&buffer[-1], num_bytes+1, 1000) != HAL_OK) { // -1 because we don't want overhead in the buffer
         return false;
     }
 
-    *out_len = num_bytes + 1;
+//    BL_Hexdump(buffer, num_bytes);
+
+    *out_len = num_bytes;
     return true;
 }
 
 // Function to send the GET ID command and receive the unique device ID
 bool BL_GetID(uint8_t *buffer, uint16_t max_len, uint16_t *out_len) {
+	return false; // not working yet -> gives wrong count of bytes back
     if (!BL_IsCommandSupported(BL_CMD_GET_ID)) {
         return false;
     }
@@ -116,16 +119,17 @@ bool BL_GetID(uint8_t *buffer, uint16_t max_len, uint16_t *out_len) {
         return false; // Provided buffer isn't large enough
     }
 
-    if (BL_UART_Receive(&buffer[1], num_bytes, 1000) != HAL_OK) {
+    if (BL_UART_Receive(&buffer[0], num_bytes, 1000) != HAL_OK) {
         return false;
     }
 
-    *out_len = num_bytes + 1;
+    *out_len = num_bytes;
     return true;
 }
 
 // Function to send the GET VERSION command and receive the version and read protection status
 bool BL_GetVersion(uint8_t *version) {
+	return false; // not working yet -> gives wrong count of bytes back
     if (!BL_IsCommandSupported(BL_CMD_GET_VERSION)) {
         return false;
     }
@@ -253,6 +257,7 @@ void BL_Hexdump(const void *buffer, size_t length) {
         // Print the byte in hex format
         printf("%02x ", buf[i]);
     }
+    printf("\n");
 }
 
 void BL_ReadMemoryHexdump(uint32_t address, uint16_t length) {
